@@ -26,7 +26,6 @@ const lolis = require('lolis.life')
 const loli = new lolis()
 const double = Math.floor(Math.random() * 2) + 1
 const ban = JSON.parse(fs.readFileSync('./database/user/banned.json'))
-const premium = JSON.parse(fs.readFileSync('./database/user/premium.json'))
 const welkom = JSON.parse(fs.readFileSync('./src/welkom.json'))
 const samih = JSON.parse(fs.readFileSync('./src/simi.json'))
 const setting = JSON.parse(fs.readFileSync('./src/settings.json'))
@@ -64,29 +63,29 @@ async function starts() {
 
 	client.on('group-participants-update', async (anu) => {
 		if (!welkom.includes(anu.jid)) return
-
 		try {
-
 			const mdata = await client.groupMetadata(anu.jid)
-
 			console.log(anu)
-
 			if (anu.action == 'add') {
-
 				num = anu.participants[0]
-
-				teks = `Olá @${num.split('@')[0]} , Seja bem vindo(a) ao grupo *${mdata.subject}*`
-
-				client.sendMessage(mdata.id, teks, MessageType.text, { contextInfo: {"mentionedJid": [num]}})
-
+				try {
+					ppimg = await client.getProfilePicture(`${anu.participants[0].split('@')[0]}@c.us`)
+				} catch {
+					ppimg = 'https://i0.wp.com/www.gambarunik.id/wp-content/uploads/2019/06/Top-Gambar-Foto-Profil-Kosong-Lucu-Tergokil-.jpg'
+				}
+				teks = `Olá @${num.split('@')[0]}\nBem-vindo ao grupo: *${mdata.subject}*`
+				let buff = await getBuffer(ppimg)
+				client.sendMessage(mdata.id, buff, MessageType.image, {caption: teks, contextInfo: {"mentionedJid": [num]}})
 			} else if (anu.action == 'remove') {
-
 				num = anu.participants[0]
-
-				teks = `1 Minuto de silencio para a saída do(a) corno(a) @${num.split('@')[0]} 👋🐂`
-
-				client.sendMessage(mdata.id, teks, MessageType.text, {contextInfo: {"mentionedJid": [num]}})
-
+				try {
+					ppimg = await client.getProfilePicture(`${num.split('@')[0]}@c.us`)
+				} catch {
+					ppimg = 'https://i0.wp.com/www.gambarunik.id/wp-content/uploads/2019/06/Top-Gambar-Foto-Profil-Kosong-Lucu-Tergokil-.jpg'
+				}
+				teks = `R.I.P @${num.split('@')[0]}👋`
+				let buff = await getBuffer(ppimg)
+				client.sendMessage(mdata.id, buff, MessageType.image, {caption: teks, contextInfo: {"mentionedJid": [num]}})
 			}
 		} catch (e) {
 			console.log('Error : %s', color(e, 'red'))
@@ -155,7 +154,6 @@ async function starts() {
 			const isBanned = ban.includes(sender)
 			const isSimi = isGroup ? samih.includes(from) : false
 			const isOwner = ownerNumber.includes(sender)
-			const isPrem = premium.includes(sender)
 			pushname = client.contacts[sender] != undefined ? client.contacts[sender].vname || client.contacts[sender].notify : undefined
 			const isUrl = (url) => {
 			    return url.match(new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/, 'gi'))
@@ -182,7 +180,7 @@ async function starts() {
 			if (authorname != undefined) { } else { authorname = groupName }	
 			
 			function addMetadata(packname, author) {	
-				if (!packname) packname = 'Sticker'; if (!author) author = 'HDBOT';	
+				if (!packname) packname = 'WABot'; if (!author) author = 'HDBot';	
 				author = author.replace(/[^a-zA-Z0-9]/g, '');	
 				let name = `${author}_${packname}`
 				if (fs.existsSync(`./src/stickers/${name}.exif`)) return `./src/stickers/${name}.exif`
@@ -308,29 +306,26 @@ async function starts() {
 					mentions(teks, jds, true)
 					break
 				case 's':
-				case 'fig':				
-				case 'f':
-				case 'stiker':	
-				case 'sticker':	
-				case 'figu':										
-					if (isBanned) return reply(nad.baned())
+				case 'fig':
+				case 'sticker':
 					if ((isMedia && !mek.message.videoMessage || isQuotedImage) && args.length == 0) {
 						const encmedia = isQuotedImage ? JSON.parse(JSON.stringify(mek).replace('quotedM','m')).message.extendedTextMessage.contextInfo : mek
 						const media = await client.downloadAndSaveMediaMessage(encmedia)
 						ran = getRandom('.webp')
 						await ffmpeg(`./${media}`)
 							.input(media)
-							.on('começando', function (cmd) {
-								console.log(`Começando : ${cmd}`)
+							.on('start', function (cmd) {
+								console.log(`Started : ${cmd}`)
 							})
-							.on('erro', function (err) {
-								console.log(`Erro : ${err}`)
+							.on('error', function (err) {
+								console.log(`Error : ${err}`)
 								fs.unlinkSync(media)
 								reply(mess.error.stick)
 							})
 							.on('end', function () {
-								console.log('Figurinha Feita')
-								exec(`webpmux -set exif ${addMetadata('Sticker', 'HDBOT')} ${ran} -o ${ran}`, async (error) => {
+								console.log('Finish')
+								exec(`webpmux -set exif ${addMetadata('MayBOT', authorname)} ${ran} -o ${ran}`, async (error) => {
+									if (error) return reply(mess.error.stick)
 									client.sendMessage(from, fs.readFileSync(ran), sticker, {quoted: mek})
 									fs.unlinkSync(media)	
 									fs.unlinkSync(ran)	
@@ -339,7 +334,7 @@ async function starts() {
 								fs.unlinkSync(media)
 								fs.unlinkSync(ran)*/
 							})
-							.addOutputOptions([`-vcodec`,`libwebp`,`-vf`,`scale='min(230,iw)':min'(230,ih)':force_original_aspect_ratio=decrease,fps=15, pad=230:230:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`])
+							.addOutputOptions([`-vcodec`,`libwebp`,`-vf`,`scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`])
 							.toFormat('webp')
 							.save(ran)
 					} else if ((isMedia && mek.message.videoMessage.seconds < 11 || isQuotedVideo && mek.message.extendedTextMessage.contextInfo.quotedMessage.videoMessage.seconds < 11) && args.length == 0) {
@@ -349,18 +344,18 @@ async function starts() {
 						reply(mess.wait)
 						await ffmpeg(`./${media}`)
 							.inputFormat(media.split('.')[1])
-							.on('começando', function (cmd) {
-								console.log(`Começando : ${cmd}`)
+							.on('start', function (cmd) {
+								console.log(`Started : ${cmd}`)
 							})
 							.on('error', function (err) {
 								console.log(`Error : ${err}`)
 								fs.unlinkSync(media)
 								tipe = media.endsWith('.mp4') ? 'video' : 'gif'
-								reply(`❌ Falhou, no momento da conversão ${tipe} para o adesivo`)
+								reply(`❌ Falha no momento da conversão ${tipe} para stiker`)
 							})
 							.on('end', function () {
-								console.log('Figurinha Feita')
-								exec(`webpmux -set exif ${addMetadata('Sticker', 'HDBOT')} ${ran} -o ${ran}`, async (error) => {
+								console.log('Finish')
+								exec(`webpmux -set exif ${addMetadata('MayBOT', authorname)} ${ran} -o ${ran}`, async (error) => {
 									if (error) return reply(mess.error.stick)
 									client.sendMessage(from, fs.readFileSync(ran), sticker, {quoted: mek})
 									fs.unlinkSync(media)
@@ -370,7 +365,7 @@ async function starts() {
 								fs.unlinkSync(media)
 								fs.unlinkSync(ran)*/
 							})
-							.addOutputOptions([`-vcodec`,`libwebp`,`-vf`,`scale='min(230,iw)':min'(230,ih)':force_original_aspect_ratio=decrease,fps=15, pad=230:230:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`])
+							.addOutputOptions([`-vcodec`,`libwebp`,`-vf`,`scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`])
 							.toFormat('webp')
 							.save(ran)
 					} else if ((isMedia || isQuotedImage) && args[0] == 'nobg') {
@@ -379,17 +374,17 @@ async function starts() {
 						ranw = getRandom('.webp')
 						ranp = getRandom('.png')
 						reply(mess.wait)
-						keyrmbg = 'IDxO1TFYnKADlX4pxcHa'
+						keyrmbg = 'Your-ApiKey'
 						await removeBackgroundFromImageFile({path: media, apiKey: keyrmbg, size: 'auto', type: 'auto', ranp}).then(res => {
 							fs.unlinkSync(media)
 							let buffer = Buffer.from(res.base64img, 'base64')
 							fs.writeFileSync(ranp, buffer, (err) => {
-								if (err) return reply('Falha, ocorreu um erro, tente novamente mais tarde✨🍉.')
+								if (err) return reply('Falha, ocorreu um erro, tente novamente mais tarde.')
 							})
 							exec(`ffmpeg -i ${ranp} -vcodec libwebp -filter:v fps=fps=20 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${ranw}`, (err) => {
 								fs.unlinkSync(ranp)
 								if (err) return reply(mess.error.stick)
-								exec(`webpmux -set exif ${addMetadata('Sticker', 'HDBOT')} ${ranw} -o ${ranw}`, async (error) => {
+								exec(`webpmux -set exif ${addMetadata('BOT', authorname)} ${ranw} -o ${ranw}`, async (error) => {
 									if (error) return reply(mess.error.stick)
 									client.sendMessage(from, fs.readFileSync(ranw), sticker, {quoted: mek})
 									fs.unlinkSync(ranw)
@@ -419,7 +414,7 @@ async function starts() {
 							.toFormat('webp')
 							.save(ran)*/
 					} else {
-						reply(`Envie uma foto, gif ou vídeo de até 5 segundos com a legenda *${prefix}fig* para criar uma figurinha!`)
+						reply(`Coloque na legenda da ft ${prefix}sticker`)
 					}
 					break
 				case 'setprefix':
@@ -592,19 +587,7 @@ break
 						client.groupRemove(from, mentioned)
 					}
 					break
-		    	case 'ban':
-					if (!isGroup) return reply(mess.only.group)
-					if (!isGroupAdmins) return reply(mess.only.admin)
-					if (!isBotGroupAdmins) return reply(mess.only.Badmin)
-					if (mek.message.extendedTextMessage != undefined || mek.message.extendedTextMessage != null) {
-						nuum1 = mek.message.extendedTextMessage.contextInfo.participant
-						sabrina.sendMessage(from, `${nuum1.split('@')[0]} | Foi banido!`, extendedText, {quoted: mek, contextInfo: { mentionedJid: [nuum1]}})
-						sabrina.groupRemove(from, [nuum1])
-					}
-					else { 
-						reply('Por Favor Marque a Mensagem Do Membro Que Deseja Remover.')
-					}
-					break
+			
                 case 'link':
                     if (!isGroup) return reply(mess.only.group)
                     if (!isGroupAdmins) return reply(mess.only.admin)
