@@ -432,31 +432,12 @@ async function starts() {
 					members_id = []
 					teks = (args.length > 1) ? body.slice(8).trim() : ''
 					teks += '\n\n'
+					teks += `「 *${groupMembers.length} ᴹᵉᵐᵇʳᵒˢ* 」\n`
 					for (let mem of groupMembers) {
-						teks += `*Chamando todos os membros* @${mem.jid.split('@')[0]}\n`
+						teks += `💉├ @${mem.jid.split('@')[0]}\n`
 						members_id.push(mem.jid)
 					}
 					mentions(teks, members_id, true)
-					break
-                                case 'tagall2':
-					members_id = []
-					teks = (args.length > 1) ? body.slice(8).trim() : ''
-					teks += '\n\n'
-					for (let mem of groupMembers) {
-						teks += `╠➥ @${mem.jid.split('@')[0]}\n`
-						members_id.push(mem.jid)
-					}
-					reply(teks)
-					break
-                                case 'tagall3':
-					members_id = []
-					teks = (args.length > 1) ? body.slice(8).trim() : ''
-					teks += '\n\n'
-					for (let mem of groupMembers) {
-						teks += `╠➥ https://wa.me/${mem.jid.split('@')[0]}\n`
-						members_id.push(mem.jid)
-					}
-					client.sendMessage(from, teks, text, {detectLinks: false, quoted: mek})
 					break
 				case 'clearall':
 					if (!isOwner) return reply('Você não é o meu dono')
