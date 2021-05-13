@@ -31,7 +31,6 @@ const samih = JSON.parse(fs.readFileSync('./src/simi.json'))
 const setting = JSON.parse(fs.readFileSync('./src/settings.json'))
 prefix = setting.prefix
 blocked = []
-ban = []
 
 function kyun(seconds){
   function pad(s){
